@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Quiz</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 30px 15px;
+        }
+
+        h1 {
+            margin-bottom: 15px;
+            text-shadow: 0 0 8px rgba(0,0,0,0.3);
+        }
+
+        form {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 25px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 450px;
+            box-sizing: border-box;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            margin-top: 12px;
+        }
+
+        input[type="file"],
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 10px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            box-shadow: 0 0 8px #a29bfe;
+            background-color: rgba(255,255,255,0.15);
+        }
+
+        button {
+            margin-top: 22px;
+            background: #6c5ce7;
+            border: none;
+            padding: 14px;
+            width: 100%;
+            font-size: 1.1rem;
+            color: white;
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 6px 20px rgba(108, 92, 231, 0.6);
+        }
+
+        button:hover {
+            background-color: #4834d4;
+        }
+
+        #result {
+            margin-top: 25px;
+            background-color: #f0f0f0;
+            color: #222;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            max-width: 650px;
+            width: 100%;
+            box-sizing: border-box;
+            overflow-y: auto;
+            max-height: 400px;
+        }
+
+        ol {
+            padding-left: 20px;
+        }
+
+        ol > li {
+            margin-bottom: 20px;
+        }
+
+        ul {
+            margin-top: 8px;
+            padding-left: 18px;
+        }
+
+        ul > li {
+            margin-bottom: 6px;
+        }
+
+        ul > li b {
+            color: #0984e3;
+        }
+
+        @media (max-width: 480px) {
+            form {
+                padding: 20px 15px;
+                max-width: 100%;
+            }
+
+            button {
+                font-size: 1rem;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Quiz Yüklə</h1>
+
+<form id="uploadForm">
+    <label for="file">PDF faylı seçin:</label>
+    <input type="file" id="file" name="file" required>
+
+    <label for="subject">Fənn:</label>
+    <input type="text" id="subject" name="subject" required>
+
+    <label for="questionCount">Sual sayı:</label>
+    <input type="number" id="questionCount" name="questionCount" value="5">
+
+    <label for="startQuestion">Başlanğıc sual №:</label>
+    <input type="number" id="startQuestion" name="startQuestion" value="1">
+
+    <label for="endQuestion">Son sual № (və ya "last"):</label>
+    <input type="text" id="endQuestion" name="endQuestion" value="last">
+
+    <button type="submit">Yüklə və çıxart</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+    document.getElementById("uploadForm").addEventListener("submit", async function(e) {
+        e.preventDefault();
+
+        const formData = new FormData();
+        const file = document.getElementById("file").files[0];
+        const subject = document.getElementById("subject").value;
+        const questionCount = document.getElementById("questionCount").value;
+        const startQuestion = document.getElementById("startQuestion").value;
+        const endQuestion = document.getElementById("endQuestion").value;
+
+        formData.append("file", file);
+        formData.append("subject", subject);
+        formData.append("questionCount", questionCount);
+        formData.append("startQuestion", startQuestion);
+        formData.append("endQuestion", endQuestion);
+
+        const response = await fetch("http://localhost:8080/api/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const resultContainer = document.getElementById("result");
+        resultContainer.innerHTML = "";
+
+        if (response.ok) {
+            const questions = await response.json();
+            if (questions.length === 0) {
+                resultContainer.innerHTML = "<p>Heç bir sual tapılmadı.</p>";
+                return;
+            }
+
+            const list = document.createElement("ol");
+
+            questions.forEach((q) => {
+                const li = document.createElement("li");
+                li.innerHTML = `<strong>${q.questionText}</strong>`;
+                const ul = document.createElement("ul");
+                q.answers.forEach((ans, index) => {
+                    const liA = document.createElement("li");
+                    if (index === q.correctIndex) {
+                        liA.innerHTML = `<b>${ans}</b>`;
+                    } else {
+                        liA.textContent = ans;
+                    }
+                    ul.appendChild(liA);
+                });
+                li.appendChild(ul);
+                list.appendChild(li);
+            });
+
+            resultContainer.appendChild(list);
+        } else {
+            resultContainer.innerHTML = "<p>Xəta baş verdi! PDF-i analiz etmək mümkün olmadı.</p>";
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,42 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.0.0' // Spring Boot plugin
+	id 'io.spring.dependency-management' version '1.1.7' // Asılılıqları idarə edir
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17) // Java 17 versiyası istifadə edilir
+	}
+}
+
+repositories {
+	mavenCentral() // Maven mərkəzi reposu
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA starter
+	implementation 'org.springframework.boot:spring-boot-starter-web' // Web starter
+	implementation 'org.apache.pdfbox:pdfbox:2.0.34' // PDF fayllar üçün PDFBox kitabxanası
+
+	compileOnly 'org.projectlombok:lombok' // Lombok, kompilyasiya zamanı
+	annotationProcessor 'org.projectlombok:lombok' // Lombok annotation processor
+
+	runtimeOnly 'org.postgresql:postgresql' // PostgreSQL sürücüsü
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools' // Dev alətləri (restart və s.)
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test' // Test starter
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+	useJUnitPlatform() // JUnit platforması
+}
+
+bootRun {
+	jvmArgs = ["-Dspring.profiles.active=dev"] // Dev profilini işə salır
+}
